@@ -244,7 +244,6 @@ class ChatBot:
             "ref_file_ids": [file_id] if file_id else []
         }
         headers = self.__get_header("/api/v0/chat/completion")
-        print(headers)
         response = requests.post(
             url,
             headers=headers,
@@ -299,13 +298,16 @@ class ChatBot:
 
             def response() -> Generator[Dict, None, None]:
                 res_content = ""
+                prev_type = ""
                 for chunk in res:
-                    content = chunk.get("content")
-                    if not content:
-                        continue
-                    res_content = res_content + chunk.get("content")
                     message_type = chunk.get("type")
+                    content = chunk.get("content")
+                    if prev_type == "thinking" and message_type == "text":
+                        res_content = ""
+                    if content:
+                        res_content = res_content + content
                     message_id = chunk.get("message_id")
+                    prev_type = message_type
                     yield {
                         "content": res_content,
                         "type": message_type,
